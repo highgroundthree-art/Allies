@@ -188,39 +188,39 @@ label.f input,label.f select{display:block;width:100%;font:inherit;padding:11px 
 <!-- SETTINGS: paste the two Eventbrite event links between the quotes. Set DRAFT to false when the board and the City approve. -->
 <script>
 const SETTINGS = {
-  DRAFT: true,
+  DRAFT: false,
   EVENTBRITE_MARCH: "",
   EVENTBRITE_SEPTEMBER: "",
   CONTACT_EMAIL: "",
   // To strike anyone, set show to false or delete the line. Names are from the City boards page and council coverage, read 2026-11-17.
   COMMISSION: [
-    { name: "Alex Popovic", role: "Chair", show: true },
-    { name: "Terry Araman", role: "Commissioner", show: true },
-    { name: "Charles Ellis", role: "Commissioner", show: true },
-    { name: "Corey Harris", role: "Commissioner", show: true },
-    { name: "Anthony Irby", role: "Commissioner", show: true },
-    { name: "Elizabeth Powers", role: "Commissioner", show: true },
-    { name: "Cassie Prinke", role: "Commissioner", show: true },
-    { name: "Antonio Rosacci", role: "Commissioner", show: true },
-    { name: "Mario Valencia", role: "Commissioner", show: true }
+    { name: "Alex Popovic", role: "Chair", show: false },
+    { name: "Terry Araman", role: "Commissioner", show: false },
+    { name: "Charles Ellis", role: "Commissioner", show: false },
+    { name: "Corey Harris", role: "Commissioner", show: false },
+    { name: "Anthony Irby", role: "Commissioner", show: false },
+    { name: "Elizabeth Powers", role: "Commissioner", show: false },
+    { name: "Cassie Prinke", role: "Commissioner", show: false },
+    { name: "Antonio Rosacci", role: "Commissioner", show: false },
+    { name: "Mario Valencia", role: "Commissioner", show: false }
   ],
   // Foundation names are from Mr. Ellis, not from a public record I could find. Board to confirm.
   FOUNDATION: [
-    { name: "Antonio Rosacci", role: "Treasurer", show: true },
-    { name: "Cassie Prinke", role: "Board member", show: true },
-    { name: "Corey Harris", role: "Board member", show: true },
-    { name: "Charles Ellis", role: "Board member", show: true }
+    { name: "Antonio Rosacci", role: "Treasurer", show: false },
+    { name: "Cassie Prinke", role: "Board member", show: false },
+    { name: "Corey Harris", role: "Board member", show: false },
+    { name: "Charles Ellis", role: "Board member", show: false }
   ],
   CITY: [
-    { name: "Kate Gallego", role: "Mayor", show: true },
-    { name: "Ann O'Brien", role: "Council Member, District 1", show: true },
-    { name: "Jim Waring", role: "Council Member, District 2", show: true },
-    { name: "Debra Stark", role: "Council Member, District 3", show: true },
-    { name: "Laura Pastor", role: "Council Member, District 4", show: true },
-    { name: "Betty Guardado", role: "Council Member, District 5", show: true },
-    { name: "Kevin Robinson", role: "Council Member, District 6", show: true },
-    { name: "Anna Hernandez", role: "Council Member, District 7", show: true },
-    { name: "Kesha Hodge Washington", role: "Vice Mayor, District 8", show: true }
+    { name: "Kate Gallego", role: "Mayor", show: false },
+    { name: "Ann O'Brien", role: "Council Member, District 1", show: false },
+    { name: "Jim Waring", role: "Council Member, District 2", show: false },
+    { name: "Debra Stark", role: "Council Member, District 3", show: false },
+    { name: "Laura Pastor", role: "Council Member, District 4", show: false },
+    { name: "Betty Guardado", role: "Council Member, District 5", show: false },
+    { name: "Kevin Robinson", role: "Council Member, District 6", show: false },
+    { name: "Anna Hernandez", role: "Council Member, District 7", show: false },
+    { name: "Kesha Hodge Washington", role: "Vice Mayor, District 8", show: false }
   ]
 };
 </script>
@@ -391,7 +391,7 @@ const SETTINGS = {
     <div class="group" id="g-commission"><h3>Military Veterans Commission<span class="pending">Pending consent</span></h3><ul class="people" id="p-commission"></ul></div>
     <div class="group" id="g-foundation"><h3>Foundation board<span class="pending">Pending consent</span></h3><ul class="people" id="p-foundation"></ul></div>
     <div class="group" id="g-city"><h3>Invited guests: Mayor and City Council<span class="pending">Pending consent</span></h3><ul class="people" id="p-city"></ul></div>
-    <p class="note" style="margin-top:14px">Listing here is an invitation to take part, not an endorsement. People are added only with their consent.</p>
+    <p class="note" id="people-note" style="margin-top:14px">Listing here is an invitation to take part, not an endorsement. People are added only with their consent.</p>
     <div class="setup" id="setup2" hidden>
       <b>Setup note (draft only):</b> council names and districts come from the City Council formal minutes of August 27, 2025 and 2026 council subcommittee records. Four seats were on the November 3, 2026 ballot and new terms begin April 19, 2027, so confirm the roster before going public. Foundation names are from Mr. Ellis and were not in any public record I could find, so the board should confirm them. Ask each person before this page goes public.
     </div>
@@ -506,6 +506,7 @@ const SETTINGS = {
   people("p-commission","g-commission", s.COMMISSION);
   people("p-foundation","g-foundation", s.FOUNDATION);
   people("p-city","g-city", s.CITY);
+  $("people-note").hidden = $("g-commission").hidden && $("g-foundation").hidden && $("g-city").hidden;
 
   /* ---- breakout explorer ---- */
   var cur = "march";
@@ -545,7 +546,18 @@ const SETTINGS = {
     });
   });
   Array.prototype.forEach.call(document.querySelectorAll("[data-sponsor]"), function(b){
-    b.addEventListener("click", function(){ track("give_click"); openGive(b.getAttribute("data-sponsor")); });
+    if(s.DRAFT){
+      b.addEventListener("click", function(){ track("give_click"); openGive(b.getAttribute("data-sponsor")); });
+    } else if(s.CONTACT_EMAIL){
+      var kind = b.getAttribute("data-sponsor") === "give" ? "Giving" : "Sponsoring";
+      var a = document.createElement("a");
+      a.className = b.className; a.textContent = b.textContent;
+      a.href = "mailto:" + s.CONTACT_EMAIL + "?subject=" + encodeURIComponent("ALLIES: " + kind);
+      b.parentNode.replaceChild(a, b);
+    } else {
+      b.textContent = "Contact details coming soon"; b.disabled = true; b.setAttribute("aria-disabled","true");
+      b.className += " ghost"; b.style.cursor = "not-allowed";
+    }
   });
 
   /* ---- modal ---- */
